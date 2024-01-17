@@ -81,6 +81,14 @@ ${CVA6_REPO_DIR}/core/cvxif_example/add_example/include/add_instr.sv
 ${CVA6_REPO_DIR}/core/cvxif_example/add_example/add_coprocessor.sv
 ${CVA6_REPO_DIR}/core/cvxif_example/add_example/instr_decoder.sv
 
+
+//ecc_accelerator
+${CVA6_REPO_DIR}/core/cvxif_example/ecc_accelerator/include/ecc_instr.sv
+${CVA6_REPO_DIR}/core/cvxif_example/ecc_accelerator/ecc_coprocessor.sv
+${CVA6_REPO_DIR}/core/cvxif_example/ecc_accelerator/state_machine.sv
+${CVA6_REPO_DIR}/core/cvxif_example/ecc_accelerator/instr_decoder.sv
+${CVA6_REPO_DIR}/core/cvxif_example/ecc_accelerator/add_unit.sv
+
 // Common Cells
 ${CVA6_REPO_DIR}/vendor/pulp-platform/common_cells/src/cf_math_pkg.sv
 ${CVA6_REPO_DIR}/vendor/pulp-platform/common_cells/src/fifo_v3.sv
