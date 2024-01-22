@@ -69,13 +69,13 @@ module ecc_accelerator_copro
     x_issue_resp_t instr_decode_o;
     assign x_issue_resp_o = instr_decode_o;
 
-    typedef struct packed {
-    x_issue_req_t  req;
-    x_issue_resp_t resp;
-    } x_issue_t;
+    // typedef struct packed {
+    // x_issue_req_t  req;
+    // x_issue_resp_t resp;
+    // } x_issue_t;
 
-    x_issue_t issue_q;
-    x_issue_t issue_n;
+    // x_issue_t issue_q;
+    // x_issue_t issue_n;
 
     instr_decoder_ecc #(
         .NbInstr   (ecc_instr::NbInstr),
@@ -114,16 +114,16 @@ module ecc_accelerator_copro
     logic result_valid;
     logic add_finish;
     logic[63:0] modulo_write;
-    logic[63:0] a_add;
-    logic[63:0] b_add;
+    logic[63:0] a_i;
+    logic[63:0] b_i;
 
     state_machine state_machine_i (
         .clk_i(clk_i),
         .rst_ni(rst_ni),
         .add_finish_i(add_finish),
-        .add_result_i(result),
-        .sub_finish_i(),
-        .sub_result_i(),
+        .add_result_i(result_add),
+        .sub_finish_i(sub_finish),
+        .sub_result_i(result_sub),
         .x_issue_req_i(x_issue_req_i),
         .x_issue_req_accept_i(instr_decode_o.accept),
         .x_result_o(result_o),
@@ -133,60 +133,74 @@ module ecc_accelerator_copro
         .modular_write_o(modular_we),
         .x_issue_ready_o(issue_ready),
         .modulo_o(modulo_write),
-        .a_o(a_add),
-        .b_o(b_add)
+        .a_o(a_i),
+        .b_o(b_i)
     );
 
-    // assign x_result_valid_o = result_valid;
-    // assign x_issue_ready_o = issue_ready;
-    // assign x_result_o = result_o;
+    assign x_result_valid_o = result_valid;
+    assign x_issue_ready_o = issue_ready;
+    assign x_result_o = result_o;
     // ------------Module addition
-    logic[63:0] result;
+    logic[63:0] result_add;
 
     add_modular_unit add_unit_t (   
         .clk_i(clk_i),
         .rst_ni(rst_ni),
-        .a_i(a_add),
-        .b_i(b_add),
+        .a_i(a_i),
+        .b_i(b_i),
         .p_i(modulo_q),
         .add_start_i(add_start),
-        .result_o(result),
+        .result_o(result_add),
         .finish_o(add_finish)
+    );
+
+    // ------------Module substraction
+    logic[63:0] result_sub;
+    logic       sub_finish;
+    sub_modular_unit sub_unit_t (   
+        .clk_i(clk_i),
+        .rst_ni(rst_ni),
+        .a_i(a_i),
+        .b_i(b_i),
+        .p_i(modulo_q),
+        .sub_start_i(sub_start),
+        .sub_result_o(result_sub),
+        .sub_finish_o(sub_finish)
     );
     
     //------ ----------------------- ---------
 
 
-    reg[63:0] result_add_q;
-    reg[63:0] result_add_n;
+    // reg[63:0] result_add_q;
+    // reg[63:0] result_add_n;
 
-    //------ Registre result ---------
+    // //------ Registre result ---------
 
-    always_ff @(posedge clk_i or negedge rst_ni) begin
-        if(!rst_ni) begin
-            result_add_n <= 0;
-            result_add_q <= 0;
-            issue_n <= 0;
-            issue_q <= 0;
-        end else begin
-            issue_n <= issue_q;
-            issue_q.req <= x_issue_req_i;
-            issue_q.resp <= instr_decode_o;
-            result_add_n = result_add_q;
-            result_add_q <= result;
-        end
-    end
+    // always_ff @(posedge clk_i or negedge rst_ni) begin
+    //     if(!rst_ni) begin
+    //         result_add_n <= 0;
+    //         result_add_q <= 0;
+    //         issue_n <= 0;
+    //         issue_q <= 0;
+    //     end else begin
+    //         issue_n <= issue_q;
+    //         issue_q.req <= x_issue_req_i;
+    //         issue_q.resp <= instr_decode_o;
+    //         result_add_n = result_add_q;
+    //         result_add_q <= result_add;
+    //     end
+    // end
 
-    //------ ------------------- ---------
-    assign x_issue_ready_o = 1'b1;
-    always_comb begin
-        x_result_o.data     = issue_n.resp.accept ? result_add_n : 0;
-        x_result_valid_o    = issue_n.resp.accept;
-        x_result_o.id       = issue_n.resp.accept ? issue_n.req.id : 0;
-        x_result_o.rd       = issue_n.resp.accept ? issue_n.req.instr[11:7] : 0;
-        x_result_o.we       = issue_n.resp.accept ? issue_n.resp.writeback : 0;
-        x_result_o.exc      = 0;
-        x_result_o.exccode  = 0;
-    end
+    // //------ ------------------- ---------
+    // assign x_issue_ready_o = 1'b1;
+    // always_comb begin
+    //     x_result_o.data     = issue_n.resp.accept ? result_add_n : 0;
+    //     x_result_valid_o    = issue_n.resp.accept;
+    //     x_result_o.id       = issue_n.resp.accept ? issue_n.req.id : 0;
+    //     x_result_o.rd       = issue_n.resp.accept ? issue_n.req.instr[11:7] : 0;
+    //     x_result_o.we       = issue_n.resp.accept ? issue_n.resp.writeback : 0;
+    //     x_result_o.exc      = 0;
+    //     x_result_o.exccode  = 0;
+    // end
 
 endmodule

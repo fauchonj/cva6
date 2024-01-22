@@ -27,16 +27,48 @@ module state_machine (
 );
     
     reg[2:0] state;
-    x_issue_req_t x_issue_in; 
+    x_issue_req_t x_issue_in;
+
+
+    always_comb begin
+        case (state)
+            `IDLE: begin
+                if (x_issue_req_accept_i) begin
+                    x_issue_ready_o <= 0;
+                end else begin
+                    x_issue_ready_o <= 1'b1;
+                end
+            end
+            `ADD: begin
+                if (add_finish_i) begin
+                    x_issue_ready_o <= 1'b1;
+                end else begin
+                    x_issue_ready_o <= 0;
+                end
+            end
+            `SUB: begin
+                if (sub_finish_i) begin
+                    x_issue_ready_o <= 1'b1;
+                end else begin
+                    x_issue_ready_o <= 0;
+                end
+            end
+            `MOD: begin
+
+            end
+
+        endcase
+    end
+
     always_ff @(posedge clk_i or negedge rst_ni) begin
         if (!rst_ni) begin
-            state           <= `IDLE;
-            x_result_o      <= 0;
-            add_start_o     <= 0;
-            sub_start_o     <= 0;
-            modular_write_o <= 0;
-            x_issue_in      <= 0;
-            x_issue_ready_o <= 1'b1;
+            state               <= `IDLE;
+            x_result_o          <= 0;
+            add_start_o         <= 0;
+            sub_start_o         <= 0;
+            modular_write_o     <= 0;
+            x_issue_in          <= 0;
+            x_issue_ready_o     <= 1'b1;
         end else begin
             case (state)
                 `IDLE: begin
@@ -46,39 +78,40 @@ module state_machine (
                     sub_start_o         <= 0;
                     modular_write_o     <= 0;
                     x_issue_in          <= 0;
-                    x_issue_ready_o     <= 1'b1;
+                    
                     if (x_issue_req_accept_i) begin
-                        x_issue_in <= x_issue_req_i;
-                        case (x_issue_in.instr[14:12])
+                        x_issue_in.id       <= x_issue_req_i.id;
+                        x_issue_in.instr    <= x_issue_req_i.instr;
+                        x_issue_in.mode     <= x_issue_req_i.mode;
+                        x_issue_in.rs       <= x_issue_req_i.rs;
+                        x_issue_in.rs_valid <= x_issue_req_i.rs_valid;
+                        case (x_issue_req_i.instr[14:12])
                             3'b000: begin
                                 state           <= `MOD;
                                 modular_write_o <= 1'b1;
+                                modulo_o        <= x_issue_req_i.rs[0];
                                 add_start_o     <= 0;
                                 sub_start_o     <= 0;
-                                x_issue_ready_o <= 0; 
                             end
                             3'b001: begin
                                 state           <= `ADD;
-                                b_o             <= x_issue_in.rs[1];
-                                a_o             <= x_issue_in.rs[0];
+                                a_o             <= x_issue_req_i.rs[0];
+                                b_o             <= x_issue_req_i.rs[1];
                                 modular_write_o <= 0;
-                                add_start_o     <= 1;
                                 sub_start_o     <= 0;
-                                x_issue_ready_o <= 0;
                             end
                             3'b010: begin
                                 state           <= `SUB;
+                                a_o             <= x_issue_req_i.rs[0];
+                                b_o             <= x_issue_req_i.rs[1];
                                 modular_write_o <= 0;
                                 add_start_o     <= 0;
-                                sub_start_o     <= 1;
-                                x_issue_ready_o <= 0;
                             end  
                             default: begin
                                 state           <= `IDLE;
                                 modular_write_o <= 0;
                                 add_start_o     <= 0;
                                 sub_start_o     <= 0;
-                                x_issue_ready_o <= 0;
                             end  
                         endcase
                     end
@@ -87,7 +120,6 @@ module state_machine (
                     x_result_o.data     <= 0;
                     x_result_valid_o    <= 1'b1;
                     x_result_o.id       <= x_issue_in.id;
-                    modulo_o            <= x_issue_in.rs[0];
                     x_result_o.rd       <= 0;
                     x_result_o.we       <= 0;
                     x_result_o.exc      <= 0;
@@ -95,24 +127,28 @@ module state_machine (
                     state               <= `IDLE;
                 end
                 `ADD: begin
+                    add_start_o     <= 1'b1;
                     if (add_finish_i) begin
+                        add_start_o         <= 0;
                         x_result_o.data     <= add_result_i;
-                        x_result_valid_o    <= 1;
+                        x_result_valid_o    <= 1'b1;
                         x_result_o.id       <= x_issue_in.id;
                         x_result_o.rd       <= x_issue_in.instr[11:7];
-                        x_result_o.we       <= 1;
+                        x_result_o.we       <= 1'b1;
                         x_result_o.exc      <= 0;
                         x_result_o.exccode  <= 0;
                         state               <= `IDLE;
                     end
                 end 
                 `SUB: begin
+                    sub_start_o     <= 1'b1;
                     if (sub_finish_i) begin
+                        sub_start_o         <= 0;
                         x_result_o.data     <= sub_result_i;
-                        x_result_valid_o    <= 1;
+                        x_result_valid_o    <= 1'b1;
                         x_result_o.id       <= x_issue_in.id;
                         x_result_o.rd       <= x_issue_in.instr[11:7];
-                        x_result_o.we       <= 1;
+                        x_result_o.we       <= 1'b1;
                         x_result_o.exc      <= 0;
                         x_result_o.exccode  <= 0;
                         state               <= `IDLE;

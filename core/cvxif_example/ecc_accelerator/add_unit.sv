@@ -14,8 +14,8 @@ module add_modular_unit (
     output  logic[63:0]     result_o
 );
 
-    logic[63:0] first_alu_o;
-    logic[63:0] second_alu_o;
+    logic[64:0] first_alu_o;
+    logic[64:0] second_alu_o;
     logic       overflow;
     
     always_ff @(posedge clk_i or negedge rst_ni) begin
@@ -24,17 +24,20 @@ module add_modular_unit (
         end else begin
             
           if (add_start_i) begin
-                finish_o = 0;
-                first_alu_o <= a_i + b_i;
-                overflow <= p_i - a_i - b_i <= 0 ? 1 : 0;
-                second_alu_o <= first_alu_o + ~p_i + 1;
-                if (!overflow) begin
-                    result_o <= first_alu_o;
-                end else begin
-                    result_o <= second_alu_o;
-                end
-                finish_o = 1;
+            finish_o = 0;
+            first_alu_o = a_i + b_i;
+            overflow = first_alu_o >= p_i ? 1 : 0;
+            second_alu_o = first_alu_o + ~p_i + 1;
+            if (!overflow) begin
+                result_o = first_alu_o[63:0];
+            end else begin
+                result_o = second_alu_o[63:0];
             end
+            finish_o = 1;
+          end else begin
+            finish_o = 0;
+            result_o = 0;
+          end
         end
     end
     
