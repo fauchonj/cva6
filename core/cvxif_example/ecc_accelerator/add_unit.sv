@@ -2,6 +2,8 @@
 // Entries: A, B, P
 // Output: (A + B) mod P
 
+// A lot of notation of those files are from the article used for every units: High‑performance ECC processor architecture design for IoT security applications
+// By Thirumalesu Kudithi1 and R. Sakthivel1
 
 module add_modular_unit (
     input   logic           clk_i,
