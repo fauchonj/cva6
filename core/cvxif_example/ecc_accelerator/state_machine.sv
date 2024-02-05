@@ -4,6 +4,7 @@ import cvxif_pkg::*;
 `define ADD     3'b001
 `define SUB     3'b010
 `define MOD     3'b011
+`define MUL     3'b100
 `define FINISH  3'b100
 
 module state_machine (
@@ -13,12 +14,15 @@ module state_machine (
     input   logic[63:0]     add_result_i,
     input   logic           sub_finish_i,
     input   logic[63:0]     sub_result_i,
+    input   logic           mul_finish_i,
+    input   logic[63:0]     mul_result_i,
     input   x_issue_req_t   x_issue_req_i,
     input   logic           x_issue_req_accept_i,
     output  x_result_t      x_result_o,
     output  logic           x_result_valid_o,
     output  logic           add_start_o,
     output  logic           sub_start_o,
+    output  logic           mul_start_o,
     output  logic           modular_write_o,
     output  logic           x_issue_ready_o,
     output  logic[63:0]     modulo_o,
@@ -48,6 +52,13 @@ module state_machine (
             end
             `SUB: begin
                 if (sub_finish_i) begin
+                    x_issue_ready_o <= 1'b1;
+                end else begin
+                    x_issue_ready_o <= 0;
+                end
+            end
+            `MUL: begin
+                if (mul_finish_i) begin
                     x_issue_ready_o <= 1'b1;
                 end else begin
                     x_issue_ready_o <= 0;
@@ -99,6 +110,7 @@ module state_machine (
                                 b_o             <= x_issue_req_i.rs[1];
                                 modular_write_o <= 0;
                                 sub_start_o     <= 0;
+                                mul_start_o     <= 0;
                             end
                             3'b010: begin
                                 state           <= `SUB;
@@ -106,6 +118,17 @@ module state_machine (
                                 b_o             <= x_issue_req_i.rs[1];
                                 modular_write_o <= 0;
                                 add_start_o     <= 0;
+                                mul_start_o     <= 0;
+                            3'b011: begin
+                                state           <= `MUL;
+                                a_o             <= x_issue_req_i.rs[0];
+                                b_o             <= x_issue_req_i.rs[1];
+                                modular_write_o <= 0;
+                                add_start_o     <= 0;
+                                sub_start_o     <= 0;
+                                inv_start_o     <= 0;
+                                
+                            end  
                             end  
                             default: begin
                                 state           <= `IDLE;
@@ -145,6 +168,20 @@ module state_machine (
                     if (sub_finish_i) begin
                         sub_start_o         <= 0;
                         x_result_o.data     <= sub_result_i;
+                        x_result_valid_o    <= 1'b1;
+                        x_result_o.id       <= x_issue_in.id;
+                        x_result_o.rd       <= x_issue_in.instr[11:7];
+                        x_result_o.we       <= 1'b1;
+                        x_result_o.exc      <= 0;
+                        x_result_o.exccode  <= 0;
+                        state               <= `IDLE;
+                    end
+                end
+                `MUL: begin
+                    mul_start_o     <= 1'b1;
+                    if (mul_finish_i) begin
+                        mul_start_o         <= 0;
+                        x_result_o.data     <= mul_result_i;
                         x_result_valid_o    <= 1'b1;
                         x_result_o.id       <= x_issue_in.id;
                         x_result_o.rd       <= x_issue_in.instr[11:7];

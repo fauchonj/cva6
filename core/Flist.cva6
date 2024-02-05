@@ -89,6 +89,7 @@ ${CVA6_REPO_DIR}/core/cvxif_example/ecc_accelerator/state_machine.sv
 ${CVA6_REPO_DIR}/core/cvxif_example/ecc_accelerator/instr_decoder.sv
 ${CVA6_REPO_DIR}/core/cvxif_example/ecc_accelerator/add_unit.sv
 ${CVA6_REPO_DIR}/core/cvxif_example/ecc_accelerator/sub_unit.sv
+${CVA6_REPO_DIR}/core/cvxif_example/ecc_accelerator/multiplier_unit.sv
 
 // Common Cells
 ${CVA6_REPO_DIR}/vendor/pulp-platform/common_cells/src/cf_math_pkg.sv
