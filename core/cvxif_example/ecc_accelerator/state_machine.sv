@@ -1,3 +1,7 @@
+//State machine in charge for the all coprocessor
+// check the scheme in the repport
+
+
 import cvxif_pkg::*;
 
 `define IDLE    3'b000
@@ -5,7 +9,7 @@ import cvxif_pkg::*;
 `define SUB     3'b010
 `define MOD     3'b011
 `define MUL     3'b100
-`define FINISH  3'b100
+`define INV     3'b101
 
 module state_machine (
     input   logic           clk_i,
@@ -16,6 +20,8 @@ module state_machine (
     input   logic[63:0]     sub_result_i,
     input   logic           mul_finish_i,
     input   logic[63:0]     mul_result_i,
+    input   logic           inv_finish_i,
+    input   logic[63:0]     inv_result_i,
     input   x_issue_req_t   x_issue_req_i,
     input   logic           x_issue_req_accept_i,
     output  x_result_t      x_result_o,
@@ -23,6 +29,7 @@ module state_machine (
     output  logic           add_start_o,
     output  logic           sub_start_o,
     output  logic           mul_start_o,
+    output  logic           inv_start_o,
     output  logic           modular_write_o,
     output  logic           x_issue_ready_o,
     output  logic[63:0]     modulo_o,
@@ -64,8 +71,12 @@ module state_machine (
                     x_issue_ready_o <= 0;
                 end
             end
-            `MOD: begin
-
+            `INV: begin
+                if (inv_finish_i) begin
+                    x_issue_ready_o <= 1'b1;
+                end else begin
+                    x_issue_ready_o <= 0;
+                end
             end
 
         endcase
@@ -103,6 +114,7 @@ module state_machine (
                                 modulo_o        <= x_issue_req_i.rs[0];
                                 add_start_o     <= 0;
                                 sub_start_o     <= 0;
+                                inv_start_o     <= 0;
                             end
                             3'b001: begin
                                 state           <= `ADD;
@@ -111,6 +123,7 @@ module state_machine (
                                 modular_write_o <= 0;
                                 sub_start_o     <= 0;
                                 mul_start_o     <= 0;
+                                inv_start_o     <= 0;
                             end
                             3'b010: begin
                                 state           <= `SUB;
@@ -119,6 +132,8 @@ module state_machine (
                                 modular_write_o <= 0;
                                 add_start_o     <= 0;
                                 mul_start_o     <= 0;
+                                inv_start_o     <= 0;
+                            end
                             3'b011: begin
                                 state           <= `MUL;
                                 a_o             <= x_issue_req_i.rs[0];
@@ -129,6 +144,14 @@ module state_machine (
                                 inv_start_o     <= 0;
                                 
                             end  
+                            3'b100: begin
+                                state           <= `INV;
+                                a_o             <= x_issue_req_i.rs[0];
+                                modular_write_o <= 0;
+                                add_start_o     <= 0;
+                                sub_start_o     <= 0;
+                                mul_start_o     <= 0;
+                                
                             end  
                             default: begin
                                 state           <= `IDLE;
@@ -182,6 +205,20 @@ module state_machine (
                     if (mul_finish_i) begin
                         mul_start_o         <= 0;
                         x_result_o.data     <= mul_result_i;
+                        x_result_valid_o    <= 1'b1;
+                        x_result_o.id       <= x_issue_in.id;
+                        x_result_o.rd       <= x_issue_in.instr[11:7];
+                        x_result_o.we       <= 1'b1;
+                        x_result_o.exc      <= 0;
+                        x_result_o.exccode  <= 0;
+                        state               <= `IDLE;
+                    end
+                end
+                `INV: begin
+                    inv_start_o     <= 1'b1;
+                    if (inv_finish_i) begin
+                        inv_start_o         <= 0;
+                        x_result_o.data     <= inv_result_i;
                         x_result_valid_o    <= 1'b1;
                         x_result_o.id       <= x_issue_in.id;
                         x_result_o.rd       <= x_issue_in.instr[11:7];

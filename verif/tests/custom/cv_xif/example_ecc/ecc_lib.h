@@ -32,6 +32,12 @@ struct test_mul {
     uint64_t p_i;
     uint64_t result;
 };
+struct test_inv {
+    uint64_t a_i;
+    uint64_t p_i;
+    uint64_t result;
+};
+
 const struct test_add test_add1 = {0, 0, 1, 0};
 const struct test_add test_add2 = {1, 3, 5, 4};
 const struct test_add test_add3 = {1, 3, 4, 0};
@@ -46,6 +52,10 @@ const struct test_mul test_mul1 = {0, 0, 1, 0};
 const struct test_mul test_mul2 = {3, 2, 7, 6};
 const struct test_mul test_mul3 = {3, 3, 9, 0};
 const struct test_mul test_mul4 = {3, 4, 10, 2};
+const struct test_inv test_inv1 = {1, 3, 1};
+const struct test_inv test_inv2 = {3, 7, 5};
+const struct test_inv test_inv3 = {6, 11, 2};
+const struct test_inv test_inv4 = {3, 17, 6};
 const struct test_add all_test_add[4] = {test_add1, test_add2, test_add3, test_add4};
 const struct test_sub all_test_sub[4] = {test_sub1, test_sub2, test_sub3, test_sub4};
 const struct test_mul all_test_mul[4] = {test_mul1, test_mul2, test_mul3, test_mul4};

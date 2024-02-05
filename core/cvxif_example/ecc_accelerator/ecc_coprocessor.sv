@@ -69,14 +69,6 @@ module ecc_accelerator_copro
     x_issue_resp_t instr_decode_o;
     assign x_issue_resp_o = instr_decode_o;
 
-    // typedef struct packed {
-    // x_issue_req_t  req;
-    // x_issue_resp_t resp;
-    // } x_issue_t;
-
-    // x_issue_t issue_q;
-    // x_issue_t issue_n;
-
     instr_decoder_ecc #(
         .NbInstr   (ecc_instr::NbInstr),
         .CoproInstr(ecc_instr::CoproInstr)
@@ -109,10 +101,11 @@ module ecc_accelerator_copro
     x_result_t result_o;
     logic add_start;
     logic sub_start;
+    logic mul_start;
+    logic inv_start;
     logic modular_we;
     logic issue_ready;
     logic result_valid;
-    logic add_finish;
     logic[63:0] modulo_write;
     logic[63:0] a_i;
     logic[63:0] b_i;
@@ -124,11 +117,17 @@ module ecc_accelerator_copro
         .add_result_i(result_add),
         .sub_finish_i(sub_finish),
         .sub_result_i(result_sub),
+        .mul_finish_i(mul_finish),
+        .mul_result_i(mul_result),
+        .inv_finish_i(inv_finish),
+        .inv_result_i(inv_result),
         .x_issue_req_i(x_issue_req_i),
         .x_issue_req_accept_i(instr_decode_o.accept),
         .x_result_o(result_o),
         .add_start_o(add_start),
         .sub_start_o(sub_start),
+        .mul_start_o(mul_start),
+        .inv_start_o(inv_start),
         .x_result_valid_o(result_valid),
         .modular_write_o(modular_we),
         .x_issue_ready_o(issue_ready),
@@ -140,9 +139,10 @@ module ecc_accelerator_copro
     assign x_result_valid_o = result_valid;
     assign x_issue_ready_o = issue_ready;
     assign x_result_o = result_o;
+
     // ------------Module addition
     logic[63:0] result_add;
-
+    logic add_finish;
     add_modular_unit add_unit_t (   
         .clk_i(clk_i),
         .rst_ni(rst_ni),
@@ -167,38 +167,41 @@ module ecc_accelerator_copro
         .sub_result_o(result_sub),
         .sub_finish_o(sub_finish)
     );
+
+    // ------------Module multiplication
+    logic[63:0] mul_result;
+    logic       mul_finish;
+    mul_modular_unit mul_unit_i (   
+        .clk_i(clk_i),
+        .rst_ni(rst_ni),
+        .a_i(a_i),
+        .b_i(b_i),
+        .p_i(modulo_q),
+        .mul_start_i(mul_start),
+        .mul_result_o(mul_result),
+        .mul_finish_o(mul_finish)
+    );
+
+    // ------------Module inversion
+    logic[63:0] inv_result;
+    logic       inv_finish;
+    inv_modular_unit inv_unit_i (   
+        .clk_i(clk_i),
+        .rst_ni(rst_ni),
+        .a_i(a_i),
+        .p_i(modulo_q),
+        .inv_start_i(inv_start),
+        .inv_result_o(inv_result),
+        .inv_finish_o(inv_finish)
+    );
     
-    //------ ----------------------- ---------
-
-
-    // reg[63:0] result_add_q;
-    // reg[63:0] result_add_n;
-
-    // //------ Registre result ---------
-
-    // always_ff @(posedge clk_i or negedge rst_ni) begin
-    //     if(!rst_ni) begin
-    //         result_add_n <= 0;
-    //         result_add_q <= 0;
-    //         issue_n <= 0;
-    //         issue_q <= 0;
-    //     end else begin
-    //         issue_n <= issue_q;
-    //         issue_q.req <= x_issue_req_i;
-    //         issue_q.resp <= instr_decode_o;
-    //         result_add_n = result_add_q;
-    //         result_add_q <= result_add;
-    //     end
-    // end
-
-    // //------ ------------------- ---------
     // assign x_issue_ready_o = 1'b1;
     // always_comb begin
-    //     x_result_o.data     = issue_n.resp.accept ? result_add_n : 0;
-    //     x_result_valid_o    = issue_n.resp.accept;
-    //     x_result_o.id       = issue_n.resp.accept ? issue_n.req.id : 0;
-    //     x_result_o.rd       = issue_n.resp.accept ? issue_n.req.instr[11:7] : 0;
-    //     x_result_o.we       = issue_n.resp.accept ? issue_n.resp.writeback : 0;
+    //     x_result_o.data     = 0;
+    //     x_result_valid_o    = instr_decode_o.accept ? 1 : 0;
+    //     x_result_o.id       = instr_decode_o.accept ? x_issue_req_i.id : 0;
+    //     x_result_o.rd       = instr_decode_o.accept ? x_issue_req_i.instr[11:7] : 0;
+    //     x_result_o.we       = instr_decode_o.accept ? instr_decode_o.writeback : 0;
     //     x_result_o.exc      = 0;
     //     x_result_o.exccode  = 0;
     // end
