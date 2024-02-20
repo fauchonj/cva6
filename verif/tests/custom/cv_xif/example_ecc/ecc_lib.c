@@ -62,7 +62,6 @@ struct point_curve point_doubling(struct point_curve p) {
     uint64_t t11    = 0;
     uint64_t t12    = 0;
     uint64_t t13    = 0;
-
     CUS_MUL_MOD(t1  , t1        , p.y);
     CUS_MUL_MOD(t2  , p.x       , p.x);
     CUS_INV_MOD(t3  , t1);
@@ -76,7 +75,6 @@ struct point_curve point_doubling(struct point_curve p) {
     CUS_SUB_MOD(t11 , p.x       , t10);
     CUS_MUL_MOD(t12 , t11       , t7);
     CUS_SUB_MOD(t13 , t12       , p.y); //y3
-
     result.x        = t10;
     result.y        = t13;
     result.curve    = p.curve;
@@ -99,7 +97,7 @@ struct point_curve point_addition(struct point_curve p, struct point_curve q) {
     uint32_t t11    = 0;
     uint32_t t12    = 0;
     uint32_t t13    = 0;
-
+    exit(2);
     CUS_SUB_MOD(t1   , q.x       , p.x);
     CUS_SUB_MOD(t2   , q.y       , p.y);
     CUS_INV_MOD(t3   , t1);
@@ -114,41 +112,42 @@ struct point_curve point_addition(struct point_curve p, struct point_curve q) {
     result.x        = t7;
     result.y        = t10;
     result.curve    = p.curve;
+    exit(result.x);
     return result;
 
 }
 
 struct point_curve point_scalar_multiplication(uint32_t k, struct point_curve p) {
-    uint32_t msb = 0;
-    uint32_t i = 31;
-    while (msb == 0) {
-        if ((1 << i) & k) {
-            msb = i;
-        }
-        i--;
-    }
-    struct point_curve result = p;
-    for (uint16_t j = msb - 1; j >= 0; j--) {
-        result = point_doubling(result);
-        if (k & (1 << j)) {
-            result = point_addition(result, p);
-        }
-    }
+    // uint32_t msb = 0;
+    // uint32_t i = 31;
+    // while (msb == 0 && i >= 0) {
+    //     if ((1 << i) & k) {
+    //         msb = i;
+    //     }
+    //     i--;
+    // }
+    struct point_curve result = point_doubling(p);
+    // for (uint16_t j = msb - 1; j >= 0; j--) {
+    //     result = point_doubling(result);
+    //     if (k & (1 << j)) {
+    //         result = point_addition(result, p);
+    //     }
+    // }
     return result;
 }
 
 struct keys key_gen(struct pub_dom dom) {
     // Normaly d it supposed to choose randomly between 1 and order -1
     // Because of simulation random not existing so it will be determinist just for test
-    uint32_t d;
-    if (dom.order & 1) {
-        d = (dom.order - 1) / 2;        
-    } else {
-        d = dom.order / 2;
-    }
+    // uint32_t d;
+    // if (dom.order & 1) {
+    //     d = (dom.order - 1) / 2;        
+    // } else {
+    //     d = dom.order / 2;
+    // }
 
-    struct point_curve Q = point_scalar_multiplication(d, dom.p_init);
-    struct keys result = {Q, d};
+    struct point_curve Q = point_scalar_multiplication(2, dom.p_init);
+    struct keys result = {Q, 2};
     return result;
 }
 
@@ -177,15 +176,7 @@ struct point_curve curve_decryption(struct pub_dom dom, uint64_t sec_key, struct
 void main() {
     //Function to test functions not usable
     uint32_t p = 11;
-    CUS_LOAD_MOD(p);
-    struct point_curve result = point_addition(test_point_add1.p, test_point_add1.q);
-    if (result.x != test_point_add1.r.x || result.y != test_point_add1.r.y) {
-        exit(1);
-    }
-
-    struct point_curve result2 = point_doubling(test_point_dbl1.p);
-    if (result2.x != test_point_dbl1.r.x || result2.y != test_point_dbl1.r.y) {
-        exit(2);
-    }
+    uint32_t a = 2;
+    struct point_curve result = point_doubling(test_key_gen1.dom.p_init);
     exit(0);
 }

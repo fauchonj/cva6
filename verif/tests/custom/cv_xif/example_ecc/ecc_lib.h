@@ -131,6 +131,18 @@ struct cipher_text {
     struct point_curve C2;
 };
 
+const struct point_curve p3 = {curve1, 0, 5};
+const struct pub_dom dom1 = {11, curve1, p3, 5};
+
+struct test_key_gen {
+    struct pub_dom dom;
+    struct keys key_result;
+};
+
+const struct point_curve pub_key1 = {4, 3};
+const struct keys keys1 = {pub_key1, 2};
+const struct test_key_gen test_key_gen1 = {dom1, keys1};
+
 struct keys key_gen(struct pub_dom);
 struct cipher_text curve_encryption(struct pub_dom, struct point_curve pub_key, struct point_curve);
 struct point_curve curve_decryption(struct pub_dom, uint64_t, struct cipher_text);
