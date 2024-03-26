@@ -34,7 +34,34 @@ def main():
         generate_test_add(int(sys.argv[1]))
         generate_test_sub(int(sys.argv[2]))
         
+def point_doubling(x1, y1, a, p):
+    l = ((3*pow(x1,2)+a)*pow((2*y1), -1, p)) % p
+    x3 = (l**2 - 2*x1) % p
+    y3 = ((x1 - x3) * l - y1) % p
+    return [x3, y3]
+
+def point_addition(x1,y1,x2,y2,p):
+    l = ((y2 - y1)*pow((x2 - x1), -1, p)) % p
+    x3 = (l**2 - x1 - x2) % p
+    y3 = ((x1 - x3) * l - y1) % p
+    return [x3, y3]
+
+# try:
+n = 1
+p = [0,5]
+r = [0,5]
+for i in range (11):
+    if p[0] == r[0] and p[1] == r[1]:
+        r = point_doubling(p[0], p[1], 2, 11)
+    else:
+        r = point_addition(r[0], r[1], p[0], p[1], 11)
+    print(r, n)
+    n += 1
+# except:
+#     print(n)
 
 
-if __name__== "__main__":
-    main()
+
+
+# if __name__== "__main__":
+#     main()

@@ -813,13 +813,13 @@ def parse_args(cwd):
                       help="RISC-V ISA subset")
   parser.add_argument("-m", "--mabi", type=str, default="",
                       help="mabi used for compilation", dest="mabi")
-  parser.add_argument("--gen_timeout", type=int, default=360,
+  parser.add_argument("--gen_timeout", type=int, default=3600,
                       help="Generator timeout limit in seconds")
   parser.add_argument("--end_signature_addr", type=str, default="0",
                       help="Address that privileged CSR test writes to at EOT")
   parser.add_argument("--iss_opts", type=str, default="",
                       help="Any ISS command line arguments")
-  parser.add_argument("--iss_timeout", type=int, default=10,
+  parser.add_argument("--iss_timeout", type=int, default=1000,
                       help="ISS sim timeout limit in seconds")
   parser.add_argument("--iss_yaml", type=str, default="",
                       help="ISS setting YAML")

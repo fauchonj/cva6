@@ -8,7 +8,7 @@
 # Original Author: Jean-Roch COULON - Thales
 
 if [ -z ${NUM_JOBS} ]; then
-  NUM_JOBS=1
+  NUM_JOBS=4
 fi
 
 # Make sure we know the path to the top of the CVA6 tree.
